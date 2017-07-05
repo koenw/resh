@@ -4,28 +4,35 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
+macro_rules! eprintln(
+    ($($arg:tt)*) => { {
+        let result = writeln!(&mut std::io::stderr(), $($arg)*);
+        result.expect("failed to print to stderr");
+    } }
+);
+
 fn main() {
     let cmd = std::env::args().nth(1).expect("not enought arguments");
 
     // dermine config file path (env variable, then default)
     let config_file = env::var("RESH_CONFIG")
-        .unwrap_or("/etc/resh.yml".to_string());
+        .unwrap_or_else(|_| {"/etc/resh.yml".to_string()});
 
     // load allowed command definitions from file -> exit on failure
     let mut contents = String::new();
     File::open(config_file)
         .unwrap_or_else(|e| {
-            println!("Failed to open file: {}", e);
+            eprintln!("Failed to open file: {}", e);
             std::process::exit(1)
         })
         .read_to_string(&mut contents)
         .unwrap_or_else(|e| {
-            println!("Failed to read file: {}", e);
+            eprintln!("Failed to read file: {}", e);
             std::process::exit(1)
         });
     let config = contents.parse::<toml::Value>()
         .unwrap_or_else(|e| {
-            println!("Failed to parse file: {}", e);
+            eprintln!("Failed to parse file: {}", e);
             std::process::exit(1)
         });
 
@@ -34,14 +41,14 @@ fn main() {
         .unwrap();
 
     if !commands.contains_key(&cmd) {
-        println!("No such command definition");
+        eprintln!("No such command definition");
         std::process::exit(1);
     }
 
     let command = match commands.get(&cmd) {
         Some(bla) => bla,
         None => {
-            println!("Failed to get definition of command {}", cmd);
+            eprintln!("Failed to get definition of command {}", cmd);
             std::process::exit(1)
         }
     };
