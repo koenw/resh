@@ -21,7 +21,6 @@ struct Config {
     commands: BTreeMap<String,String>,
 }
 
-// Read the config file into a Config struct
 fn read_config<P: AsRef<std::path::Path>>(path: P) -> Result<Config, Box<std::error::Error>> {
     let mut contents = String::new();
 
@@ -53,7 +52,7 @@ fn main() {
     };
 
     let config_file = env::var("RESH_CONFIG")
-        .unwrap_or_else(|_| {"/etc/resh.yml".to_string()});
+        .unwrap_or_else(|_| {"/etc/resh.toml".to_string()});
 
     let config: Config = read_config(&config_file).
         unwrap_or_else(|e| { die!("Failed to read {}: {}", config_file, e); });
