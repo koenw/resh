@@ -1,4 +1,8 @@
+#[macro_use]
+extern crate serde_derive;
 extern crate toml;
+
+use std::collections::BTreeMap;
 
 use std::env;
 use std::fs::File;
@@ -10,6 +14,11 @@ macro_rules! eprintln(
         result.expect("failed to print to stderr");
     } }
 );
+
+#[derive(Deserialize)]
+struct Config {
+    commands: BTreeMap<String,String>,
+}
 
 fn main() {
     let cmd = std::env::args().nth(1).expect("not enought arguments");
@@ -30,22 +39,10 @@ fn main() {
             eprintln!("Failed to read file: {}", e);
             std::process::exit(1)
         });
-    let config = contents.parse::<toml::Value>()
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to parse file: {}", e);
-            std::process::exit(1)
-        });
 
-    let commands = config["commands"]
-        .as_table()
-        .unwrap();
+    let config: Config = toml::from_str(&contents).unwrap();
 
-    if !commands.contains_key(&cmd) {
-        eprintln!("No such command definition");
-        std::process::exit(1);
-    }
-
-    let command = match commands.get(&cmd) {
+    let command = match config.commands.get(&cmd) {
         Some(bla) => bla,
         None => {
             eprintln!("Failed to get definition of command {}", cmd);
@@ -53,11 +50,12 @@ fn main() {
         }
     };
 
+
     println!("Executing: {}", command);
 
     let mut child = std::process::Command::new("/bin/sh")
         .arg("-c")
-        .arg(command.as_str().unwrap())
+        .arg(command)
         .spawn()
         .expect("failed to execute child");
 
