@@ -4,3 +4,6 @@ version = "0.1.0"
 authors = ["Koen Wilde <koen@chillheid.nl>"]
 
 [dependencies]
+serde = "1.0"
+serde_derive = "*"
+toml = "*"
