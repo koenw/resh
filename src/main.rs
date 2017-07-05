@@ -8,10 +8,11 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
-macro_rules! eprintln(
+macro_rules! die(
     ($($arg:tt)*) => { {
-        let result = writeln!(&mut std::io::stderr(), $($arg)*);
-        result.expect("failed to print to stderr");
+        writeln!(std::io::stderr(), $($arg)*)
+            .expect("Failed to print to stderr");
+        std::process::exit(1);
     } }
 );
 
@@ -20,48 +21,50 @@ struct Config {
     commands: BTreeMap<String,String>,
 }
 
-fn main() {
-    let cmd = std::env::args().nth(1).expect("not enought arguments");
-
-    // dermine config file path (env variable, then default)
-    let config_file = env::var("RESH_CONFIG")
-        .unwrap_or_else(|_| {"/etc/resh.yml".to_string()});
-
-    // load allowed command definitions from file -> exit on failure
+// Read the config file into a Config struct
+fn read_config<P: AsRef<std::path::Path>>(path: P) -> Result<Config, Box<std::error::Error>> {
     let mut contents = String::new();
-    File::open(config_file)
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to open file: {}", e);
-            std::process::exit(1)
-        })
-        .read_to_string(&mut contents)
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to read file: {}", e);
-            std::process::exit(1)
-        });
 
-    let config: Config = toml::from_str(&contents).unwrap();
+    File::open(path)?
+        .read_to_string(&mut contents)?;
 
-    let command = match config.commands.get(&cmd) {
-        Some(bla) => bla,
-        None => {
-            eprintln!("Failed to get definition of command {}", cmd);
-            std::process::exit(1)
-        }
-    };
+    let config: Config = toml::from_str(&contents)?;
+    Ok(config)
+}
 
-
-    println!("Executing: {}", command);
-
+fn run_command(command: &str) -> Result<i32, Box<std::error::Error>> {
     let mut child = std::process::Command::new("/bin/sh")
         .arg("-c")
         .arg(command)
-        .spawn()
-        .expect("failed to execute child");
+        .spawn()?;
 
-    let result = child
-        .wait()
-        .expect("failed to wait on child");
+    child
+        .wait()?
+        .code()
+        .ok_or(Box::new(std::io::Error::last_os_error()))
+}
 
-    std::process::exit(result.code().unwrap());
+fn main() {
+    let program_name = std::env::args().nth(0).unwrap_or("resh".to_string());
+
+    let command_alias = match std::env::args().nth(1) {
+        Some(alias) => alias,
+        None => { die!("Usage: {} <command alias>", program_name) }
+    };
+
+    let config_file = env::var("RESH_CONFIG")
+        .unwrap_or_else(|_| {"/etc/resh.yml".to_string()});
+
+    let config: Config = read_config(&config_file).
+        unwrap_or_else(|e| { die!("Failed to read {}: {}", config_file, e); });
+
+    let full_command = match config.commands.get(&command_alias) {
+        Some(cmd) => cmd,
+        None => { die!("Undefined command alias: {}", command_alias) },
+    };
+
+    let exitcode = run_command(&full_command)
+        .unwrap_or(1);
+
+    std::process::exit(exitcode);
 }
