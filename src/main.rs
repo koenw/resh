@@ -2,11 +2,9 @@
 extern crate serde_derive;
 extern crate toml;
 
-use std::collections::BTreeMap;
-
-use std::env;
-use std::fs::File;
 use std::io::prelude::*;
+use std::fs::File;
+use std::collections::BTreeMap;
 
 macro_rules! die(
     ($($arg:tt)*) => { {
@@ -40,18 +38,19 @@ fn run_command(command: &str) -> Result<i32, Box<std::error::Error>> {
     child
         .wait()?
         .code()
-        .ok_or(Box::new(std::io::Error::last_os_error()))
+        .ok_or_else(|| std::io::Error::last_os_error().into())
 }
 
 fn main() {
-    let program_name = std::env::args().nth(0).unwrap_or("resh".to_string());
+    let program_name = std::env::args().nth(0)
+        .unwrap_or_else(|| "resh".to_string());
 
     let command_alias = match std::env::args().nth(1) {
         Some(alias) => alias,
         None => { die!("Usage: {} <command alias>", program_name) }
     };
 
-    let config_file = env::var("RESH_CONFIG")
+    let config_file = std::env::var("RESH_CONFIG")
         .unwrap_or_else(|_| {"/etc/resh.toml".to_string()});
 
     let config: Config = read_config(&config_file).
@@ -62,7 +61,7 @@ fn main() {
         None => { die!("Undefined command alias: {}", command_alias) },
     };
 
-    let exitcode = run_command(&full_command)
+    let exitcode = run_command(full_command)
         .unwrap_or(1);
 
     std::process::exit(exitcode);
