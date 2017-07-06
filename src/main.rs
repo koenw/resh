@@ -45,10 +45,11 @@ fn main() {
     let program_name = std::env::args().nth(0)
         .unwrap_or_else(|| "resh".to_string());
 
-    let command_alias = match std::env::args().nth(1) {
-        Some(alias) => alias,
-        None => { die!("Usage: {} <command alias>", program_name) }
-    };
+    let command_alias = std::env::args().nth(1)
+        .unwrap_or_else(||
+            std::env::var("SSH_ORIGINAL_COMMAND")
+                .unwrap_or_else(|_| die!("Usage: {} <command alias>", program_name))
+        );
 
     let config_file = std::env::var("RESH_CONFIG")
         .unwrap_or_else(|_| {"/etc/resh.toml".to_string()});
