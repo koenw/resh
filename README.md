@@ -1,5 +1,7 @@
 # resh
 
+[![Build Status](https://api.travis-ci.org/koenw/resh.svg?branch=master)](https://api.travis-ci.org/koenw/resh.svg)
+
 `resh` is a shell that only allows the execution of previously
 defined aliases.
 
