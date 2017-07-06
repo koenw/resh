@@ -2,6 +2,14 @@
 name = "resh"
 version = "0.1.0"
 authors = ["Koen Wilde <koen@chillheid.nl>"]
+description = "A restricted shell that only allows execution of previously defined aliases"
+
+homepage = "https://github.com/koenw/resh"
+repository = "https://github.com/koenw/resh"
+
+readme = "README.md"
+license = "MIT"
+keywords = ["shell", "restricted", "nrpe"]
 
 [dependencies]
 serde = "1.0"
