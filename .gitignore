@@ -1,2 +1,9 @@
+# Ignore build compiled files
 target/
+
+# Ignore backups created by rustfmt
 **/*.rs.bk
+
+# Ignore vim temp and swap files
+*~
+*.sw?
