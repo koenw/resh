@@ -1,9 +1,9 @@
 # resh
 
-[![Build Status](https://api.travis-ci.org/koenw/resh.svg?branch=master)](https://api.travis-ci.org/koenw/resh)
+[![Build Status](https://api.travis-ci.org/koenw/resh.svg?branch=master)](https://travis-ci.org/koenw/resh)
 
 `resh` is a shell that only allows the execution of previously
-defined aliases.
+defined commands.
 
 It is useful when you need to limit a user to a limited set of predefined
 commands, e.g. to run nagios commands over ssh instead of NRPE.
