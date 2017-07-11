@@ -2,9 +2,14 @@
 extern crate serde_derive;
 extern crate toml;
 
+#[macro_use]
+extern crate clap;
+
 use std::io::prelude::*;
 use std::fs::File;
 use std::collections::BTreeMap;
+
+use clap::{App,Arg};
 
 macro_rules! die(
     ($($arg:tt)*) => { {
@@ -42,14 +47,24 @@ fn run_command(command: &str) -> Result<i32, Box<std::error::Error>> {
 }
 
 fn main() {
-    let program_name = std::env::args().nth(0)
-        .unwrap_or_else(|| "resh".to_string());
+    let matches = App::new(crate_name!())
+        .version(crate_version!())
+        .author("Koen Wilde <koen@chillheid.nl>")
+        .about("Restricted Shell that only allows whitelisted aliases")
+        .arg((Arg::with_name("command")
+            .short("-c")
+            .help("Alias of command to execute")
+            .value_name("COMMAND")))
+        .get_matches();
 
-    let command_alias = std::env::args().nth(1)
-        .unwrap_or_else(||
-            std::env::var("SSH_ORIGINAL_COMMAND")
-                .unwrap_or_else(|_| die!("Usage: {} <command alias>", program_name))
-        );
+    let command_alias = match matches.value_of("command") {
+        Some(cmd) => String::from(cmd),
+        None => {
+            match std::env::var("SSH_ORIGINAL_COMMAND") {
+                Ok(cmd) => cmd,
+                _ => die!("Usage: {} <command alias>", crate_name!()), }
+        }
+    };
 
     let config_file = std::env::var("RESH_CONFIG")
         .unwrap_or_else(|_| {"/etc/resh.toml".to_string()});
