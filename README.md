@@ -68,7 +68,9 @@ features like tcp port forwarding.
 
 ## Building
 
-To build resh, you will need rust and cargo. Then, from the repo root
+To build resh, you will need rust and cargo installed, for which I'll refer to
+the [official documentation](https://www.rust-lang.org/tools/install), but
+don't forget to check your local package manager. Then, from the repo root
 directory:
 
 ```sh
@@ -76,6 +78,11 @@ cargo build --release
 ```
 
 The resulting binary will be written to `target/release/resh`.
+
+## Installation
+
+`cargo install resh` will install resh to `~/.cargo/bin`, which should be in in
+your `$PATH` is cargo is installed correctly.
 
 ## Future ideas
 
