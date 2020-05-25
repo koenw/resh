@@ -3,10 +3,7 @@
 [![Build Status](https://api.travis-ci.org/koenw/resh.svg?branch=master)](https://travis-ci.org/koenw/resh)
 
 `resh` is a shell that only allows the execution of previously
-defined commands.
-
-It is useful when you need to limit a user to a limited set of predefined
-commands, e.g. to run nagios commands over ssh instead of NRPE.
+whitelisted commands. Use it to restrict automated ssh logins.
 
 ## Usage
 
@@ -20,7 +17,7 @@ foo = "echo hello"
 ```
 
 Next set resh as the login shell for the user you want to restrict. The user
-will now only be able to execute the predefined commands:
+will now only be able to execute the whitelisted commands:
 
 ```sh
 # su - example_user

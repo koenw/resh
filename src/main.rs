@@ -49,7 +49,7 @@ fn main() {
     let matches = App::new(crate_name!())
         .version(crate_version!())
         .author("Koen Wilde <koen@chillheid.nl>")
-        .about("Restricted Shell that only allows whitelisted aliases")
+        .about("Restricted (ssh) Shell that only allows whitelisted commands")
         .arg(
             Arg::with_name("command")
                 .short("-c")
