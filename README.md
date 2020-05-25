@@ -82,7 +82,7 @@ The resulting binary will be written to `target/release/resh`.
 ## Installation
 
 `cargo install resh` will install resh to `~/.cargo/bin`, which should be in in
-your `$PATH` is cargo is installed correctly.
+your `$PATH` if cargo is installed correctly.
 
 ## Future ideas
 
