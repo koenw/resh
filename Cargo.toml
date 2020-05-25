@@ -9,7 +9,7 @@ repository = "https://github.com/koenw/resh"
 
 readme = "README.md"
 license = "MIT"
-keywords = ["shell", "restricted", "nrpe"]
+keywords = ["shell", "ssh", "restricted", "nrpe"]
 
 [dependencies]
 serde = "1.0"
