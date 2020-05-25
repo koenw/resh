@@ -1,6 +1,6 @@
 [package]
 name = "resh"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Koen Wilde <koen@chillheid.nl>"]
 description = "A restricted shell that only allows execution of previously defined aliases"
 edition = "2018"
