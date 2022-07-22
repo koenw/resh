@@ -1,9 +1,5 @@
 #[macro_use]
 extern crate serde_derive;
-extern crate toml;
-
-#[macro_use]
-extern crate clap;
 
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -46,13 +42,13 @@ fn run_command(command: &str) -> Result<i32, Box<dyn std::error::Error>> {
 }
 
 fn main() {
-    let matches = App::new(crate_name!())
-        .version(crate_version!())
-        .author("Koen Wilde <koen@chillheid.nl>")
-        .about("Restricted (ssh) Shell that only allows whitelisted commands")
+    let matches = App::new(clap::crate_name!())
+        .version(clap::crate_version!())
+        .author(clap::crate_authors!())
+        .about("resh is a restricted (ssh) shell that only allows whitelisted commands")
         .arg(
             Arg::with_name("command")
-                .short("-c")
+                .short('c')
                 .help("Alias of command to execute")
                 .value_name("COMMAND"),
         )
@@ -62,7 +58,7 @@ fn main() {
         Some(cmd) => String::from(cmd),
         None => match std::env::var("SSH_ORIGINAL_COMMAND") {
             Ok(cmd) => cmd,
-            _ => die!("Usage: {} <command alias>", crate_name!()),
+            _ => die!("Usage: {} <command alias>", clap::crate_name!()),
         },
     };
 
