@@ -1,0 +1,7 @@
+[commands]
+ls = "ls -l"
+foo = 'echo bar'
+[user_commands.root]
+lsa = "ls -lah"
+echo = "echo %@"
+foo = 'echo bar override'

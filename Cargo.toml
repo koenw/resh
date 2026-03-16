@@ -1,6 +1,6 @@
 [package]
 name = "resh"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Koen Wilde <koen@chillheid.nl>"]
 description = "A restricted shell that only allows execution of previously defined aliases"
 edition = "2018"
@@ -16,4 +16,5 @@ keywords = ["shell", "ssh", "restricted", "nrpe"]
 serde = "1.0"
 serde_derive = "1.0"
 toml = "0.5"
-clap = { version = "3", features = ["cargo"] }
+clap = { version = "4", features = ["cargo"] }
+whoami = "1.5.1"

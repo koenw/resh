@@ -1,95 +1,170 @@
-# resh
+<div align="center">
 
-[![Build Status](https://api.travis-ci.org/koenw/resh.svg?branch=master)](https://travis-ci.org/koenw/resh)
+<br/>
 
-`resh` is a shell that only allows the execution of previously
-whitelisted commands. Use it to restrict automated ssh logins.
+<h1>resh</h1>
 
-## Usage
+<p><em>Restrict access. Define commands. Stay in control.</em></p>
 
-Define aliases for the commands you want to allow in the *commands* section of
-`/etc/resh.toml`:
+<p>
+  <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/Rust-2018-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust 2018" /></a>
+  <a href="https://crates.io/crates/resh"><img src="https://img.shields.io/badge/crates.io-v0.2.0-orange?style=for-the-badge&logo=rust&logoColor=white" alt="crates.io v0.2.0" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge" alt="MIT License" /></a>
+</p>
 
-```sh
-$ cat /etc/resh.toml
-[commands]
-foo = "echo hello"
-```
+<p>A secure, restricted SSH-compatible shell built in Rust.<br/>Define exactly which commands users can run. Nothing more. Nothing less.</p>
 
-Next set resh as the login shell for the user you want to restrict. The user
-will now only be able to execute the whitelisted commands:
+<br/>
 
-```sh
-# su - example_user
-Usage: -resh <command alias>
-# su - example_user bar
-Undefined command alias: bar
-#  su - example_user foo
-hello
-```
+</div>
 
-Or using ssh:
-```sh
-$ ssh example_user@localhost foo
-hello
-```
+---
 
-### Alternative config file locations
+## What is resh?
 
-You can specify an alternative config file by setting the `RESH_CONFIG`
-environmental variable. For example, to specify a config file per ssh key:
+`resh` is a **restricted shell** you install as a user's login shell or enforce via an SSH key. Define a list of command aliases in a simple TOML config, and users can only execute those — by name. No shell escapes, no surprises.
 
-```sh
-$ cat ~example_user/.ssh/authorized_keys
-environment="RESH_CONFIG=/home/test/resh.toml" AAAAB3NzaC1yc2EAAAADAQABAAACAQD7BsnSaa0gkPJDGZM7psAEkx+68ILJlKHS6MlUfVpQu7UoercvJXqctHczeIEf1eJToK7RmiKufoicLkHQplRpI9kP4IDAx2V0LO4BRncIOyF8wk6I7N6k6glAxePA4MgPaSsFp8SyXYW9wy+0491YHr9sWaqaKG78OQSCyf+/wwynRnwdn2u0dcRl064CGxrYleGe0AHHOSl9jj9J2Ve6M7pjZLuixRLqB2VBYyIAwy/zO7dvuxxvLIGr31TqKdLnnUvLKeInn5IU+UPMxuHG9DC9yLnif29OUzNRERTF4utkRI+ywByFTj/QePp+uTvmVv0PtkGwm77LKxeBP7jP3Hhe2uvf5clApcF+6EjFBNKWxVReH35NGPasY8DNL7Mt5CfBZcdi4nhQZyCQ7Z/XlXmJRMxmYsowhHQB8HkOM8MpHPqP9EBf9eTnxhMaA5qnrSy/z+1vdKHVXc4camSF8z7dRJKDmuoYl+aPcjS5MX6AEVz5gtFsizjhLq+mp2HkvskSZCPY87D0/hriPPtSMUlhh4XKyFJ2VzkfIr1uqQlaN1tIPdCAdUDjH5o5fnqSFHqkD8iah8OiNhmGLk2VPiYohnMLcDdLGtPMkOpX3ODgjNOTcaUfaMZW4IacVcHA2A11Zxe8r73qcjKjcX5mEppMa1Z2vosqJn2dGTasHQ== example_user@example
-```
+It integrates natively with **SSH** via `SSH_ORIGINAL_COMMAND`, supports **per-user command overrides**, and drops into an **interactive prompt** when no command is given.
 
-### Use resh without changing the login shell
+---
 
-If you don't want to change the user's login shell, you can force resh on a
-per-key basis by setting the `command` option for the ssh public key:
+## Features
 
-```sh
-$ cat ~example_user/.ssh/authorized_keys
-command="/usr/local/bin/resh" AAAAB3NzaC1yc2EAAAADAQABAAACAQD7BsnSaa0gkPJDGZM7psAEkx+68ILJlKHS6MlUfVpQu7UoercvJXqctHczeIEf1eJToK7RmiKufoicLkHQplRpI9kP4IDAx2V0LO4BRncIOyF8wk6I7N6k6glAxePA4MgPaSsFp8SyXYW9wy+0491YHr9sWaqaKG78OQSCyf+/wwynRnwdn2u0dcRl064CGxrYleGe0AHHOSl9jj9J2Ve6M7pjZLuixRLqB2VBYyIAwy/zO7dvuxxvLIGr31TqKdLnnUvLKeInn5IU+UPMxuHG9DC9yLnif29OUzNRERTF4utkRI+ywByFTj/QePp+uTvmVv0PtkGwm77LKxeBP7jP3Hhe2uvf5clApcF+6EjFBNKWxVReH35NGPasY8DNL7Mt5CfBZcdi4nhQZyCQ7Z/XlXmJRMxmYsowhHQB8HkOM8MpHPqP9EBf9eTnxhMaA5qnrSy/z+1vdKHVXc4camSF8z7dRJKDmuoYl+aPcjS5MX6AEVz5gtFsizjhLq+mp2HkvskSZCPY87D0/hriPPtSMUlhh4XKyFJ2VzkfIr1uqQlaN1tIPdCAdUDjH5o5fnqSFHqkD8iah8OiNhmGLk2VPiYohnMLcDdLGtPMkOpX3ODgjNOTcaUfaMZW4IacVcHA2A11Zxe8r73qcjKjcX5mEppMa1Z2vosqJn2dGTasHQ== example_user@example
-```
+|     | Feature                   | Description                                                     |
+| --- | ------------------------- | --------------------------------------------------------------- |
+| 🔒  | **Command allowlist**     | Users can only run explicitly defined command aliases           |
+| 👤  | **Per-user overrides**    | Define different commands or arguments on a per-user basis      |
+| 🔧  | **Argument substitution** | Pass arguments through with `%@`, `%1`, `%2`, …                 |
+| 🖥️  | **Interactive mode**      | Drop into a `resh>` prompt when no command is provided          |
+| 🔑  | **SSH integration**       | Reads `SSH_ORIGINAL_COMMAND` for seamless key-level enforcement |
+| 📁  | **Per-key config**        | Scope config per SSH key via `RESH_CONFIG` in `authorized_keys` |
+| ⚙️  | **TOML config**           | Simple, human-readable configuration with sane defaults         |
 
-### Full ssh *`authorized_keys`* example
+---
+
+## Quick Start
+
+### 1 · Install resh
+
+Via Cargo (installs to `~/.cargo/bin`):
 
 ```sh
-$ cat ~example_user/.ssh/authorized_keys
-command="/usr/local/bin/resh",environment="RESH_CONFIG=/usr/local/etc/resh.toml",restrict AAAAB3NzaC1yc2EAAAADAQABAAACAQD7BsnSaa0gkPJDGZM7psAEkx+68ILJlKHS6MlUfVpQu7UoercvJXqctHczeIEf1eJToK7RmiKufoicLkHQplRpI9kP4IDAx2V0LO4BRncIOyF8wk6I7N6k6glAxePA4MgPaSsFp8SyXYW9wy+0491YHr9sWaqaKG78OQSCyf+/wwynRnwdn2u0dcRl064CGxrYleGe0AHHOSl9jj9J2Ve6M7pjZLuixRLqB2VBYyIAwy/zO7dvuxxvLIGr31TqKdLnnUvLKeInn5IU+UPMxuHG9DC9yLnif29OUzNRERTF4utkRI+ywByFTj/QePp+uTvmVv0PtkGwm77LKxeBP7jP3Hhe2uvf5clApcF+6EjFBNKWxVReH35NGPasY8DNL7Mt5CfBZcdi4nhQZyCQ7Z/XlXmJRMxmYsowhHQB8HkOM8MpHPqP9EBf9eTnxhMaA5qnrSy/z+1vdKHVXc4camSF8z7dRJKDmuoYl+aPcjS5MX6AEVz5gtFsizjhLq+mp2HkvskSZCPY87D0/hriPPtSMUlhh4XKyFJ2VzkfIr1uqQlaN1tIPdCAdUDjH5o5fnqSFHqkD8iah8OiNhmGLk2VPiYohnMLcDdLGtPMkOpX3ODgjNOTcaUfaMZW4IacVcHA2A11Zxe8r73qcjKjcX5mEppMa1Z2vosqJn2dGTasHQ== example_user@example
+cargo install resh
 ```
 
-For more information on the options you can specify in the `authorized_keys`
-file, refer to the *`AUTHORIZED_KEYS FILE FORMAT`* section of `man 8 sshd`. You
-may especially be interested in the `restrict` option, which disables
-features like tcp port forwarding.
-
-## Building
-
-To build resh, you will need rust and cargo installed, for which I'll refer to
-the [official documentation](https://www.rust-lang.org/tools/install), but
-don't forget to check your local package manager. Then, from the repo root
-directory:
+Or build from source:
 
 ```sh
 cargo build --release
+# binary written to target/release/resh
 ```
 
-The resulting binary will be written to `target/release/resh`.
+### 2 · Configure commands
 
-## Installation
+Create `/etc/resh.toml` and define your allowed command aliases:
 
-`cargo install resh` will install resh to `~/.cargo/bin`, which should be in in
-your `$PATH` if cargo is installed correctly.
+```toml
+[commands]
+ls  = "ls -l"
+foo = "echo bar"
 
-## Future ideas
+[user_commands.alice]
+echo = "echo %@"
+foo  = "echo bar override"
+```
 
-* Possibly support an *IncludeDir* option in the config file, for easier
-  provisioning from e.g. puppet or ansible.
-* Provide pre-build binaries for OpenBSD, FreeBSD and linux.
+`%@` passes all arguments through. `%1`, `%2`, … pass individual positional arguments.
 
-## Feedback & Questions
+### 3 · Set as the login shell
 
-If you've got any feedback or questions, please don't hesitate :)
+```sh
+usermod -s /usr/local/bin/resh example_user
+```
+
+The user can now only execute whitelisted aliases:
+
+```sh
+$ ssh example_user@localhost foo
+bar
+$ ssh example_user@localhost notallowed
+Undefined command alias: notallowed
+```
+
+### 4 · Interactive mode
+
+When no command is given, resh drops into an interactive prompt:
+
+```sh
+$ su - example_user
+resh> foo
+bar
+resh>
+```
+
+---
+
+## Config Reference
+
+| Key                          | Description                                    |
+| ---------------------------- | ---------------------------------------------- |
+| `[commands]`                 | Global command aliases available to all users  |
+| `[user_commands.<username>]` | Per-user overrides that shadow global commands |
+| `%@`                         | Substitute all provided arguments              |
+| `%1`, `%2`, …                | Substitute individual positional arguments     |
+| `RESH_CONFIG`                | Override the default `/etc/resh.toml` path     |
+
+---
+
+## SSH `authorized_keys` Integration
+
+Force resh for a specific key without changing the login shell:
+
+```sh
+# ~/.ssh/authorized_keys
+command="/usr/local/bin/resh" ssh-rsa AAAA... example_user@example
+```
+
+Scope config per key and lock down SSH features with `restrict`:
+
+```sh
+command="/usr/local/bin/resh",environment="RESH_CONFIG=/home/example_user/resh.toml",restrict ssh-rsa AAAA... example_user@example
+```
+
+> The `restrict` option disables TCP port forwarding and other SSH features. See the `AUTHORIZED_KEYS FILE FORMAT` section of `man 8 sshd` for the full list of options.
+
+---
+
+## Stack
+
+| Layer          | Technology                |
+| -------------- | ------------------------- |
+| 🦀 Language    | Rust (edition 2018)       |
+| 📦 Config      | TOML via `serde` + `toml` |
+| 🖥️ CLI         | `clap` v4                 |
+| 🔍 User lookup | `whoami`                  |
+
+---
+
+## Project Structure
+
+```
+resh/
+├── src/
+│   └── main.rs               # Core shell logic, config parsing, command execution
+├── test/
+│   ├── docker-compose.yaml   # Integration test environment
+│   ├── resh.toml             # Test config
+│   └── test.bats             # Bats integration tests
+├── Cargo.toml                # Package manifest and dependencies
+└── test.sh                   # Test runner script
+```
+
+---
+
+<div align="center">
+
+Made with ❤️ by [Koen Wilde](https://github.com/koenw)
+
+MIT License · Free forever · Self-host it
+
+</div>

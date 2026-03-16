@@ -1,0 +1,74 @@
+services:
+  resh-test:
+    hostname: resh-test
+    container_name: resh-test
+    build:
+      context: ./..
+      dockerfile_inline: |
+        FROM rust:alpine as builder
+        WORKDIR /usr/src
+        RUN apk add --no-cache musl-dev
+
+        # The standard way to build
+        #COPY . .
+        #RUN cargo build --release
+
+        # A workaround to avoid redownloading and recompling everything when only the source code changes
+        # This is in leui of a cargo build --deps-only command
+        COPY ./Cargo.toml ./Cargo.lock ./
+        RUN mkdir src \
+            && echo "fn main() {println!(\"if you see this, the build failed\")}" > src/main.rs \
+            && cargo build
+        RUN rm src/main.rs
+
+        # Copy the source code and build the release binary
+        COPY ./src ./src
+        RUN cargo build --release
+
+        FROM alpine:latest
+        WORKDIR /root
+        COPY --from=builder /usr/src/target/release/resh .
+
+        # SSH Server
+        RUN apk add --no-cache openssh-server
+        RUN sed -i 's/#Port 22/Port 1234/' /etc/ssh/sshd_config
+        RUN sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+        RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+        RUN sed -i 's/#ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+        RUN sed -i 's/#KbdInteractiveAuthentication yes/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+        RUN echo 'AuthenticationMethods publickey' >> /etc/ssh/sshd_config
+
+        # SSH Server
+        RUN ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ''
+        # Root User Authoirzed Keys
+        RUN mkdir -p /root/.ssh/
+        RUN cat /etc/ssh/ssh_host_ed25519_key.pub >> /root/.ssh/authorized_keys
+        RUN chmod 600 /root/.ssh/authorized_keys
+        # Start the SSHD server and keep it up
+        CMD ["/usr/sbin/sshd", "-D"]
+    volumes:
+      - resh-ssh-volume:/etc/ssh/
+    networks:
+      - resh-isolated-network
+
+  resh-test-ssh-client:
+    hostname: resh-test-ssh-client
+    container_name: resh-test-ssh-client
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM alpine:latest
+        RUN apk add --no-cache openssh-client
+        RUN mkdir -p /root/.ssh
+        CMD tail -f /dev/null
+    volumes:
+      - resh-ssh-volume:/mnt/resh-ssh-volume/
+    networks:
+      - resh-isolated-network
+
+networks:
+  resh-isolated-network:
+    driver: bridge
+
+volumes:
+  resh-ssh-volume:

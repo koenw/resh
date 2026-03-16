@@ -7,3 +7,7 @@ target/
 # Ignore vim temp and swap files
 *~
 *.sw?
+
+# npm
+test/bats
+test/test_helper
