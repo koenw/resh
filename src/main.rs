@@ -1,11 +1,10 @@
-#[macro_use]
-extern crate serde_derive;
+use serde_derive::Deserialize;
 
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-use clap::{App, Arg};
+use clap::Arg;
 
 macro_rules! die(
     ($($arg:tt)*) => { {
@@ -15,7 +14,7 @@ macro_rules! die(
     } }
 );
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Config {
     commands: BTreeMap<String, String>,
 }
@@ -42,19 +41,19 @@ fn run_command(command: &str) -> Result<i32, Box<dyn std::error::Error>> {
 }
 
 fn main() {
-    let matches = App::new(clap::crate_name!())
+    let matches = clap::Command::new(clap::crate_name!())
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
         .about("resh is a restricted (ssh) shell that only allows whitelisted commands")
         .arg(
-            Arg::with_name("command")
+            Arg::new("command")
                 .short('c')
                 .help("Alias of command to execute")
                 .value_name("COMMAND"),
         )
         .get_matches();
 
-    let command_alias = match matches.value_of("command") {
+    let command_alias = match matches.get_one::<String>("command") {
         Some(cmd) => String::from(cmd),
         None => match std::env::var("SSH_ORIGINAL_COMMAND") {
             Ok(cmd) => cmd,
